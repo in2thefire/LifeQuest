@@ -91,8 +91,13 @@ app.use(
       return callback(null, allowedOrigins.has(origin));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.options("*", cors({ credentials: true }));
+
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -286,8 +291,14 @@ const getOrCreateProgress = async (tx, userId) => {
 };
 
 const authRequired = async (req, res, next) => {
-  const token = req.cookies.lf_token;
+  const auth = req.headers.authorization || "";
+  const [type, bearerToken] = auth.split(" ");
+  const token =
+    (type === "Bearer" && bearerToken ? bearerToken : null) ||
+    req.cookies.lf_token;
+
   if (!token) return res.status(401).json({ error: "Unauthorized" });
+
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
@@ -402,7 +413,7 @@ app.post("/api/auth/register", rateLimitAuth, async (req, res) => {
   });
   const token = signToken(user);
   setAuthCookie(res, token);
-  return res.json({ user: serializeUser(user) });
+  return res.json({ user: serializeUser(user), token });
 });
 
 app.post("/api/auth/login", rateLimitAuth, async (req, res) => {
@@ -419,7 +430,7 @@ app.post("/api/auth/login", rateLimitAuth, async (req, res) => {
   await getOrCreateProgress(prisma, user.id);
   const token = signToken(user);
   setAuthCookie(res, token);
-  return res.json({ user: serializeUser(user) });
+  return res.json({ user: serializeUser(user), token });
 });
 
 app.post("/api/auth/logout", (_req, res) => {
