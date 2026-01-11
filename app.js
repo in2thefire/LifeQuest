@@ -286,7 +286,7 @@ class ApiClient {
     const token = localStorage.getItem("lf_token");
 
     const res = await fetch(`${API_BASE}${path}`, {
-      credentials: "include", // оставляем, чтобы ПК работал через cookie
+      credentials: "include", // оставляем для ПК/cookie
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
