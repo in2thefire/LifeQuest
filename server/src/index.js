@@ -423,8 +423,14 @@ app.post("/api/auth/login", rateLimitAuth, async (req, res) => {
 });
 
 app.post("/api/auth/logout", (_req, res) => {
-  res.clearCookie("lf_token", { httpOnly: true, sameSite: "lax" });
-  res.json({ ok: true });
+  res.clearCookie("lf_token", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  return res.status(200).json({ ok: true });
 });
 
 app.get("/api/auth/me", authRequired, (req, res) => {
