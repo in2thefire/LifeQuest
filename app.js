@@ -1,5 +1,4 @@
-const API_BASE =
-  window.API_URL || `http://${window.location.hostname}:4000`;
+const API_BASE = window.API_URL || `http://${window.location.hostname}:4000`;
 const DEBUG_WEEKLY = true;
 const DEBUG_CONSISTENCY = false;
 
@@ -154,8 +153,9 @@ const DASHBOARD_PURGE_KEY = "lifeforge_dashboard_purge";
 const getRankTierForLevel = (level) => {
   const normalized = Math.max(1, level);
   return (
-    RANK_TIERS.find((tier) => normalized >= tier.min && normalized <= tier.max) ||
-    RANK_TIERS[RANK_TIERS.length - 1]
+    RANK_TIERS.find(
+      (tier) => normalized >= tier.min && normalized <= tier.max
+    ) || RANK_TIERS[RANK_TIERS.length - 1]
   );
 };
 
@@ -167,9 +167,7 @@ const getUtcDateKey = (date) =>
     date.getUTCDate()
   )}`;
 const getLocalDateKey = (date) =>
-  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(
-    date.getDate()
-  )}`;
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 const parseDateKey = (key) => {
   if (!key) return null;
   const [y, m, d] = key.split("-").map((val) => Number.parseInt(val, 10));
@@ -257,7 +255,10 @@ const hexToRgba = (hex, alpha) => {
   if (![3, 6].includes(normalized.length)) return hex;
   const expanded =
     normalized.length === 3
-      ? normalized.split("").map((c) => c + c).join("")
+      ? normalized
+          .split("")
+          .map((c) => c + c)
+          .join("")
       : normalized;
   const intVal = Number.parseInt(expanded, 16);
   if (Number.isNaN(intVal)) return hex;
@@ -282,14 +283,18 @@ const rollingAverage = (values, windowSize) => {
 
 class ApiClient {
   async request(path, options = {}) {
+    const token = localStorage.getItem("lf_token");
+
     const res = await fetch(`${API_BASE}${path}`, {
-      credentials: "include",
+      credentials: "include", // оставляем, чтобы ПК работал через cookie
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
       ...options,
     });
+
     if (res.status === 204) return null;
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Request failed");
@@ -616,10 +621,10 @@ class HabitManager {
     this.init();
     if (this.app.ui.activeHabit?.id === id) this.app.ui.renderModalCalendar();
   }
-    renderCalendar() {
-      const container = document.getElementById("habits-calendar-list");
-      if (!container) return;
-      container.innerHTML = `
+  renderCalendar() {
+    const container = document.getElementById("habits-calendar-list");
+    if (!container) return;
+    container.innerHTML = `
       <div class="habits-sections">
         <div class="habits-column">
           <div class="habits-header forge">Forge</div>
@@ -632,41 +637,41 @@ class HabitManager {
         </div>
       </div>
       `;
-      const forgeContainer = document.getElementById("forge-habits");
-      const purgeContainer = document.getElementById("purge-habits");
-      const todayKey = this.getDateKey(new Date());
-      this.habits.forEach((h) => {
-        const heatmap = this.buildHeatmap(h.history, 26, h.createdAt);
-        const streakSummary = this.app.ui?.getStreakSummary
-          ? this.app.ui.getStreakSummary(h)
-          : { currentStreak: 0, type: "DAILY" };
-        const streakSuffix =
-          streakSummary.type === "WEEKLY"
-            ? "wk"
-            : streakSummary.type === "MONTHLY"
-              ? "mo"
-              : "d";
-        const streakLabel = `${streakSummary.currentStreak} ${streakSuffix}`;
-        const totalSuccess = Object.values(h.history || {}).filter(
-          (val) => val === true
-        ).length;
-        const card = document.createElement("div");
-        const typeClass =
-          h.type === "PURGE" ? "lf-card--purge" : "lf-card--forge";
-        card.className = `habit-calendar-card lf-card lf-card--surface ${typeClass}`;
-        card.style.setProperty("--habit-color", h.color);
-        card.style.setProperty("--weeks", heatmap.weeks);
-        if (this.app.ui.activeHabit?.id === h.id) {
-          card.classList.add("lf-card--active");
-        }
-        if (h.history[todayKey]) {
-          card.classList.add("lf-card--done");
-        }
-        // TODO: add lf-card--missed when overdue schedule data is available.
-        card.onclick = (e) => {
-          if (!e.target.closest(".btn-delete")) this.app.ui.openHabitModal(h);
-        };
-        card.innerHTML = `
+    const forgeContainer = document.getElementById("forge-habits");
+    const purgeContainer = document.getElementById("purge-habits");
+    const todayKey = this.getDateKey(new Date());
+    this.habits.forEach((h) => {
+      const heatmap = this.buildHeatmap(h.history, 26, h.createdAt);
+      const streakSummary = this.app.ui?.getStreakSummary
+        ? this.app.ui.getStreakSummary(h)
+        : { currentStreak: 0, type: "DAILY" };
+      const streakSuffix =
+        streakSummary.type === "WEEKLY"
+          ? "wk"
+          : streakSummary.type === "MONTHLY"
+          ? "mo"
+          : "d";
+      const streakLabel = `${streakSummary.currentStreak} ${streakSuffix}`;
+      const totalSuccess = Object.values(h.history || {}).filter(
+        (val) => val === true
+      ).length;
+      const card = document.createElement("div");
+      const typeClass =
+        h.type === "PURGE" ? "lf-card--purge" : "lf-card--forge";
+      card.className = `habit-calendar-card lf-card lf-card--surface ${typeClass}`;
+      card.style.setProperty("--habit-color", h.color);
+      card.style.setProperty("--weeks", heatmap.weeks);
+      if (this.app.ui.activeHabit?.id === h.id) {
+        card.classList.add("lf-card--active");
+      }
+      if (h.history[todayKey]) {
+        card.classList.add("lf-card--done");
+      }
+      // TODO: add lf-card--missed when overdue schedule data is available.
+      card.onclick = (e) => {
+        if (!e.target.closest(".btn-delete")) this.app.ui.openHabitModal(h);
+      };
+      card.innerHTML = `
         <div class="habit-card-head">
           <div class="habit-card-title">
             <h3>${h.name}</h3>
@@ -709,38 +714,40 @@ class HabitManager {
     futureContainer.innerHTML = "";
     const todayKey = this.getDateKey(new Date());
     const todayUtcKey = getUtcDateKey(new Date());
-      this.habits.forEach((h) => {
-        const isDone = h.history[todayKey];
-        const rewardLabel = this.getRewardLabel(h);
-        const card = document.createElement("div");
-        const typeClass =
-          h.type === "PURGE" ? "lf-card--purge" : "lf-card--forge";
-        card.className = `daily-quest-card lf-card lf-card--surface ${typeClass}`;
-        if (isDone) card.classList.add("lf-card--done");
-        // TODO: add lf-card--missed when overdue schedule data is available.
-        card.style.setProperty("--habit-color", h.color);
-        card.innerHTML = `
+    this.habits.forEach((h) => {
+      const isDone = h.history[todayKey];
+      const rewardLabel = this.getRewardLabel(h);
+      const card = document.createElement("div");
+      const typeClass =
+        h.type === "PURGE" ? "lf-card--purge" : "lf-card--forge";
+      card.className = `daily-quest-card lf-card lf-card--surface ${typeClass}`;
+      if (isDone) card.classList.add("lf-card--done");
+      // TODO: add lf-card--missed when overdue schedule data is available.
+      card.style.setProperty("--habit-color", h.color);
+      card.innerHTML = `
           <div class="quest-info">
             <h4>${h.name}</h4>
             <small>${isDone ? "Done!" : `Reward: ${rewardLabel}`}</small>
         </div>
-        <button class="btn-primary" ${isDone ? "disabled" : ""} onclick="app.habitManager.toggleDayStatus('${h.id}', '${todayKey}')">
+        <button class="btn-primary" ${
+          isDone ? "disabled" : ""
+        } onclick="app.habitManager.toggleDayStatus('${h.id}', '${todayKey}')">
           ${isDone ? "Done" : "Mark Done"}
         </button>
       `;
       container.appendChild(card);
     });
     const todos = this.app.todoManager?.todos || [];
-      todos.forEach((todo) => {
-        const dueKey = todo.dueDate ? getUtcDateKey(todo.dueDate) : null;
-        const isToday = dueKey === todayUtcKey;
-        const completed = this.app.todoManager.isCompleted(todo);
-        const rewardLabel = this.app.todoManager.getRewardLabel(todo);
-        const card = document.createElement("div");
-        card.className = "daily-quest-card lf-card lf-card--surface";
-        if (completed) card.classList.add("completed", "lf-card--done");
-        card.style.setProperty("--habit-color", todo.color || "#58a6ff");
-        card.innerHTML = `
+    todos.forEach((todo) => {
+      const dueKey = todo.dueDate ? getUtcDateKey(todo.dueDate) : null;
+      const isToday = dueKey === todayUtcKey;
+      const completed = this.app.todoManager.isCompleted(todo);
+      const rewardLabel = this.app.todoManager.getRewardLabel(todo);
+      const card = document.createElement("div");
+      card.className = "daily-quest-card lf-card lf-card--surface";
+      if (completed) card.classList.add("completed", "lf-card--done");
+      card.style.setProperty("--habit-color", todo.color || "#58a6ff");
+      card.innerHTML = `
           <div class="quest-info">
             <h4>${todo.title}</h4>
           <small>${completed ? "Done!" : `Reward: ${rewardLabel}`}</small>
@@ -751,7 +758,9 @@ class HabitManager {
       `;
       const btn = card.querySelector("button");
       if (btn) {
-        btn.addEventListener("click", () => this.app.todoManager.toggleComplete(todo.id));
+        btn.addEventListener("click", () =>
+          this.app.todoManager.toggleComplete(todo.id)
+        );
       }
       if (isToday || (!todo.dueDate && todo.isDaily)) {
         container.appendChild(card);
@@ -872,7 +881,9 @@ class TodoManager {
           <span class="todo-title">${todo.title}</span>
         </label>
         <div class="todo-meta">
-          <span class="todo-priority ${todo.priority.toLowerCase()}">${todo.priority}</span>
+          <span class="todo-priority ${todo.priority.toLowerCase()}">${
+        todo.priority
+      }</span>
           ${todo.isDaily ? '<span class="todo-chip">Daily</span>' : ""}
           ${dueLabel ? `<span class="todo-chip">Due ${dueLabel}</span>` : ""}
           <span class="todo-reward">${rewardLabel}</span>
@@ -880,7 +891,11 @@ class TodoManager {
             <i class="material-icons">delete</i>
           </button>
         </div>
-        ${todo.description ? `<div class="todo-desc">${todo.description}</div>` : ""}
+        ${
+          todo.description
+            ? `<div class="todo-desc">${todo.description}</div>`
+            : ""
+        }
       `;
       const checkbox = card.querySelector("input");
       const deleteBtn = card.querySelector(".btn-delete");
@@ -915,7 +930,9 @@ class FocusSession {
 class FocusManager {
   constructor(app, sessions = []) {
     this.app = app;
-    this.sessions = (sessions || []).map((session) => new FocusSession(session));
+    this.sessions = (sessions || []).map(
+      (session) => new FocusSession(session)
+    );
     this.activeSession = null;
     this.timerInterval = null;
     this.timerEndsAt = null;
@@ -925,7 +942,9 @@ class FocusManager {
     this.renderToday();
   }
   setSessionsFromData(sessions = []) {
-    this.sessions = (sessions || []).map((session) => new FocusSession(session));
+    this.sessions = (sessions || []).map(
+      (session) => new FocusSession(session)
+    );
     this.renderToday();
   }
   bindUI() {
@@ -958,7 +977,8 @@ class FocusManager {
     if (startBtn) startBtn.addEventListener("click", () => this.startFocus());
     if (completeBtn)
       completeBtn.addEventListener("click", () => this.completeFocus());
-    if (cancelBtn) cancelBtn.addEventListener("click", () => this.cancelFocus());
+    if (cancelBtn)
+      cancelBtn.addEventListener("click", () => this.cancelFocus());
     this.updateTimerDisplay(this.selectedMinutes * 60);
     this.updateControls();
   }
@@ -978,7 +998,9 @@ class FocusManager {
     const completeBtn = document.getElementById("focus-complete-btn");
     const cancelBtn = document.getElementById("focus-cancel-btn");
     const hasActive =
-      this.activeSession && !this.activeSession.completed && !this.activeSession.cancelled;
+      this.activeSession &&
+      !this.activeSession.completed &&
+      !this.activeSession.cancelled;
     if (startBtn) startBtn.disabled = hasActive;
     if (completeBtn) completeBtn.disabled = !hasActive;
     if (cancelBtn) cancelBtn.disabled = !hasActive;
@@ -1010,7 +1032,11 @@ class FocusManager {
     return this.selectedMinutes;
   }
   async startFocus() {
-    if (this.activeSession && !this.activeSession.completed && !this.activeSession.cancelled) {
+    if (
+      this.activeSession &&
+      !this.activeSession.completed &&
+      !this.activeSession.cancelled
+    ) {
       return;
     }
     const durationMin = this.getSelectedDuration();
@@ -1132,12 +1158,20 @@ class FocusManager {
       card.innerHTML = `
         <div class="focus-item-main">
           <div>
-            <div class="focus-item-title">${session.type} • ${session.durationMin} min</div>
+            <div class="focus-item-title">${session.type} • ${
+        session.durationMin
+      } min</div>
             <div class="focus-item-meta">${timeLabel} • ${statusLabel}</div>
           </div>
-          <div class="focus-item-reward">+${session.xpAwarded} XP / +${session.coinsAwarded} FC</div>
+          <div class="focus-item-reward">+${session.xpAwarded} XP / +${
+        session.coinsAwarded
+      } FC</div>
         </div>
-        ${session.notes ? `<div class="focus-item-notes">${session.notes}</div>` : ""}
+        ${
+          session.notes
+            ? `<div class="focus-item-notes">${session.notes}</div>`
+            : ""
+        }
       `;
       list.appendChild(card);
     });
@@ -1346,8 +1380,10 @@ class UI {
       btn.classList.toggle("active", isActive);
     });
     filterInputs.forEach((input) => {
-      if (input.value === "FORGE") input.checked = this.dashboardModalState.showForge;
-      if (input.value === "PURGE") input.checked = this.dashboardModalState.showPurge;
+      if (input.value === "FORGE")
+        input.checked = this.dashboardModalState.showForge;
+      if (input.value === "PURGE")
+        input.checked = this.dashboardModalState.showPurge;
     });
     if (sortSelect) {
       sortSelect.value = this.dashboardScoreboardSort;
@@ -1392,11 +1428,11 @@ class UI {
     }
     this.renderHabitDashboardSmall();
   }
-    initModalScroll() {
-      const contents = document.querySelectorAll(".modal-content");
-      contents.forEach((content) => {
-        const body = content.querySelector(".modal-body");
-        if (!body) return;
+  initModalScroll() {
+    const contents = document.querySelectorAll(".modal-content");
+    contents.forEach((content) => {
+      const body = content.querySelector(".modal-body");
+      if (!body) return;
       let fade = content.querySelector(".scroll-fade-bottom");
       if (!fade) {
         fade = document.createElement("div");
@@ -1413,45 +1449,46 @@ class UI {
         scrollBtn.innerHTML = '<i class="material-icons">keyboard_arrow_up</i>';
         content.appendChild(scrollBtn);
       }
-      const update = () => this.updateModalScrollState(content, body, scrollBtn);
+      const update = () =>
+        this.updateModalScrollState(content, body, scrollBtn);
       body.addEventListener("scroll", update);
       scrollBtn.addEventListener("click", (event) => {
         event.stopPropagation();
         body.scrollTo({ top: 0, behavior: "smooth" });
       });
-        update();
-      });
-    }
-    initCardSystemV2() {
-      const selectors = [
-        ".habit-shell",
-        ".habit-dashboard-card",
-        ".xp-rules-card",
-        ".lf-chart-card",
-        ".quests-section",
-        ".account-panel",
-        ".kpi-card",
-        ".stat-card",
-        ".auth-card",
-        ".todo-shell",
-        ".focus-shell",
-        ".focus-panel",
-        ".focus-journal",
-      ];
-      document.querySelectorAll(selectors.join(",")).forEach((card) => {
-        card.classList.add("lf-card");
-        if (
-          !card.classList.contains("lf-card--surface") &&
-          !card.classList.contains("lf-card--focus") &&
-          !card.classList.contains("lf-card--core")
-        ) {
-          card.classList.add("lf-card--surface");
-        }
-      });
-    }
-    updateModalScrollState(content, body, scrollBtn) {
-      const atBottom =
-        body.scrollTop + body.clientHeight >= body.scrollHeight - 2;
+      update();
+    });
+  }
+  initCardSystemV2() {
+    const selectors = [
+      ".habit-shell",
+      ".habit-dashboard-card",
+      ".xp-rules-card",
+      ".lf-chart-card",
+      ".quests-section",
+      ".account-panel",
+      ".kpi-card",
+      ".stat-card",
+      ".auth-card",
+      ".todo-shell",
+      ".focus-shell",
+      ".focus-panel",
+      ".focus-journal",
+    ];
+    document.querySelectorAll(selectors.join(",")).forEach((card) => {
+      card.classList.add("lf-card");
+      if (
+        !card.classList.contains("lf-card--surface") &&
+        !card.classList.contains("lf-card--focus") &&
+        !card.classList.contains("lf-card--core")
+      ) {
+        card.classList.add("lf-card--surface");
+      }
+    });
+  }
+  updateModalScrollState(content, body, scrollBtn) {
+    const atBottom =
+      body.scrollTop + body.clientHeight >= body.scrollHeight - 2;
     content.classList.toggle("is-at-bottom", atBottom);
     if (scrollBtn) {
       scrollBtn.classList.toggle("is-visible", body.scrollTop > 200);
@@ -1630,7 +1667,9 @@ class UI {
         addButton.classList.toggle("forge", isForge);
         addButton.classList.toggle("purge", !isForge);
       }
-      const rulesCards = document.querySelectorAll(".habit-shell .xp-rules-card");
+      const rulesCards = document.querySelectorAll(
+        ".habit-shell .xp-rules-card"
+      );
       rulesCards.forEach((card) => {
         card.classList.toggle("forge", isForge);
         card.classList.toggle("purge", !isForge);
@@ -1959,8 +1998,8 @@ class UI {
         streakSummary.type === "WEEKLY"
           ? "wk"
           : streakSummary.type === "MONTHLY"
-            ? "mo"
-            : "d";
+          ? "mo"
+          : "d";
       if (last7El) last7El.textContent = "0%";
       if (last30El) last30El.textContent = "0%";
       if (currentStreakEl) {
@@ -1977,7 +2016,8 @@ class UI {
             })
           : "--";
       }
-      if (bestEl) bestEl.textContent = `${streakSummary.bestStreak} ${streakSuffix}`;
+      if (bestEl)
+        bestEl.textContent = `${streakSummary.bestStreak} ${streakSuffix}`;
       if (momentumEl) momentumEl.textContent = "Getting started";
       if (this.habitStatsChart) this.habitStatsChart.destroy();
       this.habitStatsChart = null;
@@ -1993,7 +2033,9 @@ class UI {
     }, null);
     const chartStart = (() => {
       const fallback = range.from;
-      const candidate = firstLogDate ? addLocalDays(firstLogDate, -1) : fallback;
+      const candidate = firstLogDate
+        ? addLocalDays(firstLogDate, -1)
+        : fallback;
       return parseLocalDateKey(candidate) > parseLocalDateKey(fallback)
         ? candidate
         : fallback;
@@ -2010,14 +2052,20 @@ class UI {
     const last7 = values.slice(-7);
     const last30 = values.slice(-30);
     const last7Consistency = last7.length
-      ? Math.round((last7.reduce((sum, val) => sum + val, 0) / last7.length) * 100)
+      ? Math.round(
+          (last7.reduce((sum, val) => sum + val, 0) / last7.length) * 100
+        )
       : 0;
     const last30Consistency = last30.length
-      ? Math.round((last30.reduce((sum, val) => sum + val, 0) / last30.length) * 100)
+      ? Math.round(
+          (last30.reduce((sum, val) => sum + val, 0) / last30.length) * 100
+        )
       : 0;
     const prev7 = values.slice(-14, -7);
     const prev7Consistency = prev7.length
-      ? Math.round((prev7.reduce((sum, val) => sum + val, 0) / prev7.length) * 100)
+      ? Math.round(
+          (prev7.reduce((sum, val) => sum + val, 0) / prev7.length) * 100
+        )
       : 0;
 
     const streakSummary = this.getStreakSummary(habit);
@@ -2025,8 +2073,8 @@ class UI {
       streakSummary.type === "WEEKLY"
         ? "wk"
         : streakSummary.type === "MONTHLY"
-          ? "mo"
-          : "d";
+        ? "mo"
+        : "d";
 
     const last7El = document.getElementById("habit-stat-last7");
     const last30El = document.getElementById("habit-stat-last30");
@@ -2053,13 +2101,15 @@ class UI {
           })
         : "--";
     }
-    if (bestEl) bestEl.textContent = `${streakSummary.bestStreak} ${streakSuffix}`;
+    if (bestEl)
+      bestEl.textContent = `${streakSummary.bestStreak} ${streakSuffix}`;
     if (momentumEl) {
       const basis = last30.length ? last30Consistency : last7Consistency;
       momentumEl.textContent = getMomentumLabel(basis);
     }
     if (emptyEl) {
-      emptyEl.textContent = "No data yet. Complete this habit to forge your first mark.";
+      emptyEl.textContent =
+        "No data yet. Complete this habit to forge your first mark.";
       emptyEl.classList.add("hidden");
     }
 
@@ -2078,7 +2128,14 @@ class UI {
       last7Consistency * 0.45 + last30Consistency * 0.35 + streakFactor * 0.2
     );
     const boundedScore = Math.max(0, Math.min(100, habitScore));
-    const rank = boundedScore >= 90 ? "S" : boundedScore >= 80 ? "A" : boundedScore >= 70 ? "B" : "C";
+    const rank =
+      boundedScore >= 90
+        ? "S"
+        : boundedScore >= 80
+        ? "A"
+        : boundedScore >= 70
+        ? "B"
+        : "C";
     if (scoreEl) scoreEl.textContent = `${boundedScore}`;
     if (rankEl) {
       rankEl.textContent = rank;
@@ -2095,7 +2152,11 @@ class UI {
       );
       if (momentumLabelEl) {
         momentumLabelEl.textContent =
-          delta > 1 ? "Building momentum" : delta < -1 ? "Losing momentum" : "Stable";
+          delta > 1
+            ? "Building momentum"
+            : delta < -1
+            ? "Losing momentum"
+            : "Stable";
       }
     }
 
@@ -2281,7 +2342,9 @@ class UI {
                 const missedStreak = Number(point?.missedStreak || 0);
                 if (
                   window.location.hostname &&
-                  ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
+                  ["localhost", "127.0.0.1"].includes(
+                    window.location.hostname
+                  ) &&
                   !window.__lfHabitTooltipMismatchLogged
                 ) {
                   if (completed && item.parsed?.y < 0.5) {
@@ -2394,9 +2457,7 @@ class UI {
         });
       }
     });
-    const pct = totalTracked
-      ? Math.round((totalDone / totalTracked) * 100)
-      : 0;
+    const pct = totalTracked ? Math.round((totalDone / totalTracked) * 100) : 0;
     if (DEBUG_CONSISTENCY) {
       if (totalTracked === 0) {
         console.warn("Consistency trackedAll is 0!");
@@ -2473,7 +2534,9 @@ class UI {
   getActiveHabitsForLegend(state) {
     const habits = this.app.habitManager?.habits || [];
     const filters = this.getDashboardFilters(state);
-    const visibleHabits = habits.filter((habit) => filters.includes(habit.type));
+    const visibleHabits = habits.filter((habit) =>
+      filters.includes(habit.type)
+    );
     const getCreatedAtTime = (habit) => {
       if (!habit?.createdAt) return null;
       const createdAt = new Date(habit.createdAt);
@@ -2482,8 +2545,7 @@ class UI {
     };
     const typeOrder = { FORGE: 0, PURGE: 1 };
     return [...visibleHabits].sort((a, b) => {
-      const typeDelta =
-        (typeOrder[a.type] ?? 99) - (typeOrder[b.type] ?? 99);
+      const typeDelta = (typeOrder[a.type] ?? 99) - (typeOrder[b.type] ?? 99);
       if (typeDelta !== 0) return typeDelta;
       const aTime = getCreatedAtTime(a);
       const bTime = getCreatedAtTime(b);
@@ -2670,7 +2732,9 @@ class UI {
         history: buildHistoryFromLogs(logs, successValue),
       });
       const streakFactor = (Math.min(streak, 14) / 14) * 100;
-      const score = Math.round(last7 * 0.5 + last30 * 0.35 + streakFactor * 0.15);
+      const score = Math.round(
+        last7 * 0.5 + last30 * 0.35 + streakFactor * 0.15
+      );
       const momentumDelta = Math.round(last7 - prev7);
       const doneToday = statusByDate.get(todayKey) === successValue;
       const atRisk = !doneToday && streak > 0;
@@ -2736,7 +2800,9 @@ class UI {
   buildWeeklyProgress(daysCount, state) {
     const habits = this.app.habitManager?.habits || [];
     const filters = this.getDashboardFilters(state);
-    const visibleHabits = habits.filter((habit) => filters.includes(habit.type));
+    const visibleHabits = habits.filter((habit) =>
+      filters.includes(habit.type)
+    );
     const getCreatedAtTime = (habit) => {
       if (!habit?.createdAt) return null;
       const createdAt = new Date(habit.createdAt);
@@ -2835,7 +2901,12 @@ class UI {
     const sampleKeys = visibleHabits
       .slice(0, 2)
       .map((h) => Object.keys(h.history || {}).slice(0, 5));
-    console.debug("[weekly] dayKeys", dayKeys, "sample history keys", sampleKeys);
+    console.debug(
+      "[weekly] dayKeys",
+      dayKeys,
+      "sample history keys",
+      sampleKeys
+    );
 
     const last7 = calcPeriod(last7Keys);
     const prev7 = calcPeriod(prev7Keys);
@@ -3019,9 +3090,9 @@ class UI {
         const todayAccent =
           day.forgeDone > 0 && day.purgeDone === 0
             ? "var(--forge-accent-rgb)"
-          : day.purgeDone > 0 && day.forgeDone === 0
-          ? "var(--purge-accent-rgb)"
-          : "var(--forge-accent-rgb)";
+            : day.purgeDone > 0 && day.forgeDone === 0
+            ? "var(--purge-accent-rgb)"
+            : "var(--forge-accent-rgb)";
         dayCol.style.setProperty("--today-accent-rgb", todayAccent);
       }
       const tooltip = day.na
@@ -3039,20 +3110,18 @@ class UI {
         bars.appendChild(naBar);
       } else {
         const forgeBar = document.createElement("div");
-        forgeBar.className = `mini-bar forge${day.forgeTotal ? "" : " is-empty"}`;
+        forgeBar.className = `mini-bar forge${
+          day.forgeTotal ? "" : " is-empty"
+        }`;
         forgeBar.appendChild(
-          buildSegmentsContainer(
-            day.forgeDoneSegments,
-            day.forgeMissedCount
-          )
+          buildSegmentsContainer(day.forgeDoneSegments, day.forgeMissedCount)
         );
         const purgeBar = document.createElement("div");
-        purgeBar.className = `mini-bar purge${day.purgeTotal ? "" : " is-empty"}`;
+        purgeBar.className = `mini-bar purge${
+          day.purgeTotal ? "" : " is-empty"
+        }`;
         purgeBar.appendChild(
-          buildSegmentsContainer(
-            day.purgeDoneSegments,
-            day.purgeMissedCount
-          )
+          buildSegmentsContainer(day.purgeDoneSegments, day.purgeMissedCount)
         );
 
         bars.appendChild(forgeBar);
@@ -3088,7 +3157,9 @@ class UI {
     });
     if (todayEl) {
       const today = dayStats[todayIndex];
-      todayEl.textContent = `Today: ${today?.done || 0}/${today?.total || 0} done`;
+      todayEl.textContent = `Today: ${today?.done || 0}/${
+        today?.total || 0
+      } done`;
     }
     if (teamEl) {
       const teamLabel = teamEl
@@ -3115,7 +3186,9 @@ class UI {
     const tableEl = document.querySelector(".scoreboard-table");
     const modalEl = document.getElementById("habits-dashboard-modal");
     if (!listEl) return;
-    const data = await this.loadHabitDashboard(this.dashboardModalState.rangeDays);
+    const data = await this.loadHabitDashboard(
+      this.dashboardModalState.rangeDays
+    );
     if (!data) return;
     const scoreboard = this.buildDashboardScoreboard(
       data,
@@ -3130,9 +3203,15 @@ class UI {
       if (tableEl) tableEl.classList.add("hidden");
       listEl.innerHTML = "";
       const teamScoreEl = document.getElementById("scoreboard-team-score");
-      const teamMomentumEl = document.getElementById("scoreboard-team-momentum");
-      const todayProgressEl = document.getElementById("scoreboard-today-progress");
-      const todayBreakdownEl = document.getElementById("scoreboard-today-breakdown");
+      const teamMomentumEl = document.getElementById(
+        "scoreboard-team-momentum"
+      );
+      const todayProgressEl = document.getElementById(
+        "scoreboard-today-progress"
+      );
+      const todayBreakdownEl = document.getElementById(
+        "scoreboard-today-breakdown"
+      );
       if (teamScoreEl) teamScoreEl.textContent = "0";
       if (teamMomentumEl) {
         teamMomentumEl.classList.remove("is-up", "is-down", "is-flat");
@@ -3141,7 +3220,7 @@ class UI {
       }
       if (todayProgressEl) todayProgressEl.textContent = "0/0";
       if (todayBreakdownEl) {
-      todayBreakdownEl.textContent = "Forge 0/0 | Purge 0/0";
+        todayBreakdownEl.textContent = "Forge 0/0 | Purge 0/0";
       }
       this.refreshModalScroll(modalEl);
       return;
@@ -3151,18 +3230,24 @@ class UI {
 
     const teamScoreEl = document.getElementById("scoreboard-team-score");
     const teamMomentumEl = document.getElementById("scoreboard-team-momentum");
-    const todayProgressEl = document.getElementById("scoreboard-today-progress");
-    const todayBreakdownEl = document.getElementById("scoreboard-today-breakdown");
+    const todayProgressEl = document.getElementById(
+      "scoreboard-today-progress"
+    );
+    const todayBreakdownEl = document.getElementById(
+      "scoreboard-today-breakdown"
+    );
     if (teamScoreEl) {
       teamScoreEl.textContent = `${scoreboard.summary.teamScore}`;
     }
     if (teamMomentumEl) {
       const delta = scoreboard.summary.teamMomentum;
       const arrow = delta > 1 ? "&#9650;" : delta < -1 ? "&#9660;" : "&#8594;";
-      const momentumClass = delta > 1 ? "is-up" : delta < -1 ? "is-down" : "is-flat";
+      const momentumClass =
+        delta > 1 ? "is-up" : delta < -1 ? "is-down" : "is-flat";
       teamMomentumEl.classList.remove("is-up", "is-down", "is-flat");
       teamMomentumEl.classList.add("scoreboard-momentum", momentumClass);
-      teamMomentumEl.innerHTML = delta === 100 ? "PEAK" : `${arrow} ${Math.abs(delta)}%`;
+      teamMomentumEl.innerHTML =
+        delta === 100 ? "PEAK" : `${arrow} ${Math.abs(delta)}%`;
     }
     if (todayProgressEl) {
       todayProgressEl.textContent = `${scoreboard.summary.todayDone}/${scoreboard.summary.todayTotal}`;
@@ -3177,12 +3262,16 @@ class UI {
       const momentumClass = isPeak
         ? "is-up"
         : row.momentumDelta > 1
-          ? "is-up"
-          : row.momentumDelta < -1
-            ? "is-down"
-            : "is-flat";
+        ? "is-up"
+        : row.momentumDelta < -1
+        ? "is-down"
+        : "is-flat";
       const momentumArrow =
-        row.momentumDelta > 1 ? "&#9650;" : row.momentumDelta < -1 ? "&#9660;" : "&#8594;";
+        row.momentumDelta > 1
+          ? "&#9650;"
+          : row.momentumDelta < -1
+          ? "&#9660;"
+          : "&#8594;";
       const momentumDisplay = isPeak
         ? "PEAK"
         : `${momentumArrow} ${Math.abs(row.momentumDelta)}%`;
@@ -3204,9 +3293,7 @@ class UI {
         <span class="scoreboard-momentum ${momentumClass}">${momentumDisplay}</span>
         <span class="scoreboard-risk">${riskIcon}</span>
       `;
-      rowEl.addEventListener("click", () =>
-        this.openHabitStatsModal(row.id)
-      );
+      rowEl.addEventListener("click", () => this.openHabitStatsModal(row.id));
       listEl.appendChild(rowEl);
     });
     this.refreshModalScroll(modalEl);
@@ -3227,7 +3314,8 @@ class UI {
     };
     const start = labels[0];
     const end = labels[labels.length - 1];
-    const mid = labels.length > 2 ? labels[Math.floor(labels.length / 2)] : null;
+    const mid =
+      labels.length > 2 ? labels[Math.floor(labels.length / 2)] : null;
     if (startEl) startEl.textContent = start ? formatLabel(start) : "--";
     if (midEl) midEl.textContent = mid ? formatLabel(mid) : "";
     if (endEl) endEl.textContent = end ? formatLabel(end) : "--";
@@ -3241,7 +3329,10 @@ class UI {
         item.className = "chart-legend-item";
         const dot = document.createElement("span");
         dot.className = "chart-legend-dot";
-        dot.style.setProperty("--legend-color", dataset._baseColor || dataset.borderColor);
+        dot.style.setProperty(
+          "--legend-color",
+          dataset._baseColor || dataset.borderColor
+        );
         const name = document.createElement("span");
         name.textContent = dataset.label;
         item.appendChild(dot);
@@ -3430,7 +3521,11 @@ class UI {
     let cursor = this.addMonthsToDate(currentMonthStart, -1);
     while (cursor >= historyStart) {
       const end = this.getMonthEndLocal(cursor);
-      const needed = this.getRequiredCountForInterval("MONTHLY", cursor, required);
+      const needed = this.getRequiredCountForInterval(
+        "MONTHLY",
+        cursor,
+        required
+      );
       const done = this.countDoneInRange(habit, cursor, end);
       if (done >= needed) {
         current += 1;
@@ -3444,7 +3539,11 @@ class UI {
     const endLimit = this.addMonthsToDate(currentMonthStart, -1);
     while (iter <= endLimit) {
       const end = this.getMonthEndLocal(iter);
-      const needed = this.getRequiredCountForInterval("MONTHLY", iter, required);
+      const needed = this.getRequiredCountForInterval(
+        "MONTHLY",
+        iter,
+        required
+      );
       const done = this.countDoneInRange(habit, iter, end);
       if (done >= needed) {
         run += 1;
@@ -3462,8 +3561,16 @@ class UI {
     today.setHours(0, 0, 0, 0);
     const historyStart = this.getHistoryStartDate(habit);
     const interval = this.getIntervalBounds(type, today);
-    const required = this.getRequiredCountForInterval(type, interval.start, count);
-    const intervalDone = this.countDoneInRange(habit, interval.start, interval.end);
+    const required = this.getRequiredCountForInterval(
+      type,
+      interval.start,
+      count
+    );
+    const intervalDone = this.countDoneInRange(
+      habit,
+      interval.start,
+      interval.end
+    );
     let currentStreak = 0;
     let bestStreak = 0;
     if (historyStart) {
@@ -3579,12 +3686,12 @@ class LifeForge {
     this.ui.initStatsModal();
     this.ui.initTreasuryModal();
     this.ui.initHabitModal();
-      this.ui.initHabitStatsModal();
-      this.ui.initHabitDashboard();
-      this.ui.initModalEscapeClose();
-      this.ui.initModalScroll();
-      this.ui.initCardSystemV2();
-      this.ui.updateStats();
+    this.ui.initHabitStatsModal();
+    this.ui.initHabitDashboard();
+    this.ui.initModalEscapeClose();
+    this.ui.initModalScroll();
+    this.ui.initCardSystemV2();
+    this.ui.updateStats();
     this.ui.updateDailyQuote();
     this.bindAuth();
     const streakTypeEl = document.getElementById("habit-streak-type");
@@ -3604,8 +3711,7 @@ class LifeForge {
       if (!addHabitButton) return;
       const nameOk = Boolean(habitNameInput?.value.trim());
       const typeOk =
-        habitTypeSelect &&
-        ["FORGE", "PURGE"].includes(habitTypeSelect.value);
+        habitTypeSelect && ["FORGE", "PURGE"].includes(habitTypeSelect.value);
       const difficultyOk =
         habitDifficultySelect &&
         ["1", "2", "3"].includes(habitDifficultySelect.value);
@@ -3617,8 +3723,7 @@ class LifeForge {
       let countOk = true;
       if (streakTypeValue === "WEEKLY" || streakTypeValue === "MONTHLY") {
         const raw = Number.parseInt(streakCountInput?.value, 10);
-        const max =
-          streakTypeValue === "WEEKLY" ? 7 : getDaysInCurrentMonth();
+        const max = streakTypeValue === "WEEKLY" ? 7 : getDaysInCurrentMonth();
         countOk = Number.isFinite(raw) && raw >= 1 && raw <= max;
       }
       addHabitButton.disabled = !(
@@ -3782,7 +3887,8 @@ class LifeForge {
         : { progress: null };
     const habits =
       habitsRes.status === "fulfilled" ? habitsRes.value : { habits: [] };
-    const todos = todosRes.status === "fulfilled" ? todosRes.value : { todos: [] };
+    const todos =
+      todosRes.status === "fulfilled" ? todosRes.value : { todos: [] };
     const focusToday = focusRes.status === "fulfilled" ? focusRes.value : null;
     this.player.applyProgress(progress.progress, this.user);
     this.habitManager.setHabitsFromData(habits.habits || []);
@@ -3921,4 +4027,3 @@ class LifeForge {
 }
 
 const app = new LifeForge();
-
