@@ -112,7 +112,7 @@ app.use(passport.initialize());
 
 const cookieOptions = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   secure: process.env.NODE_ENV === "production",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -305,7 +305,10 @@ const rateLimitState = new Map();
 const rateLimitAuth = (req, res, next) => {
   const key = req.ip;
   const now = Date.now();
-  const entry = rateLimitState.get(key) || { count: 0, reset: now + rateLimitWindowMs };
+  const entry = rateLimitState.get(key) || {
+    count: 0,
+    reset: now + rateLimitWindowMs,
+  };
   if (now > entry.reset) {
     entry.count = 0;
     entry.reset = now + rateLimitWindowMs;
@@ -313,7 +316,9 @@ const rateLimitAuth = (req, res, next) => {
   entry.count += 1;
   rateLimitState.set(key, entry);
   if (entry.count > rateLimitMax) {
-    return res.status(429).json({ error: "Too many requests. Try again later." });
+    return res
+      .status(429)
+      .json({ error: "Too many requests. Try again later." });
   }
   return next();
 };
@@ -580,7 +585,10 @@ app.post("/api/habits/:id/log", authRequired, async (req, res) => {
   });
   if (!habit) return res.status(404).json({ error: "Habit not found" });
 
-  const allowedStatuses = [SUCCESS_STATUS[habit.type], FAILURE_STATUS[habit.type]];
+  const allowedStatuses = [
+    SUCCESS_STATUS[habit.type],
+    FAILURE_STATUS[habit.type],
+  ];
   if (status && !allowedStatuses.includes(status)) {
     return res.status(400).json({ error: "Invalid status for habit type" });
   }
@@ -606,7 +614,11 @@ app.post("/api/habits/:id/log", authRequired, async (req, res) => {
       return { log: existing, progress };
     }
 
-    const baseReward = getRewardForStatus(habit.type, habit.difficulty, nextStatus);
+    const baseReward = getRewardForStatus(
+      habit.type,
+      habit.difficulty,
+      nextStatus
+    );
     const { start: dayStart, end: dayEnd } = getDayBounds(logDate);
     const totals = await getDailyTotals(tx, req.user.id, dayStart, dayEnd);
     const existingXp = existing?.xp || 0;
@@ -700,12 +712,18 @@ app.get("/api/habits/:id/logs", authRequired, async (req, res) => {
   const start = parseDateOnly(from) || fallbackFrom;
   const endInput =
     parseDateOnly(to) ||
-    new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+    );
   const end = new Date(endInput);
   end.setUTCDate(end.getUTCDate() + 1);
 
   const logs = await prisma.habitLog.findMany({
-    where: { userId: req.user.id, habitId: habit.id, date: { gte: start, lt: end } },
+    where: {
+      userId: req.user.id,
+      habitId: habit.id,
+      date: { gte: start, lt: end },
+    },
     orderBy: { date: "asc" },
   });
   res.json({
@@ -740,8 +758,7 @@ app.get("/api/habits/stats", authRequired, async (req, res) => {
   if (!startInput) startDate.setUTCDate(startDate.getUTCDate() - 29);
 
   const maxRangeDays = 90;
-  const rangeDays =
-    Math.floor((endDate - startDate) / 86400000) + 1;
+  const rangeDays = Math.floor((endDate - startDate) / 86400000) + 1;
   if (rangeDays > maxRangeDays) {
     startDate = new Date(endDate);
     startDate.setUTCDate(startDate.getUTCDate() - (maxRangeDays - 1));
@@ -897,14 +914,20 @@ app.patch("/api/todos/:id", authRequired, async (req, res) => {
   }
   const { start, end } = getDayBounds(new Date());
   const nextIsDaily = updates.isDaily ?? todo.isDaily;
-  const completedNow = todo.completedAt && (!nextIsDaily || isSameUtcDay(todo.completedAt, start, end));
+  const completedNow =
+    todo.completedAt &&
+    (!nextIsDaily || isSameUtcDay(todo.completedAt, start, end));
   const nextPriority = updates.priority || todo.priority;
   const baseReward = getTodoReward(nextPriority);
   if (!completedNow) {
     updates.xpReward = baseReward.xp;
     updates.coinReward = baseReward.coins;
   }
-  if (nextIsDaily && todo.completedAt && !isSameUtcDay(todo.completedAt, start, end)) {
+  if (
+    nextIsDaily &&
+    todo.completedAt &&
+    !isSameUtcDay(todo.completedAt, start, end)
+  ) {
     updates.completedAt = null;
   }
   const updated = await prisma.todo.update({
@@ -936,7 +959,9 @@ app.post("/api/todos/:id/complete", authRequired, async (req, res) => {
     if (!todo) return { error: "Todo not found" };
     const { start, end } = getDayBounds(new Date());
     const completedToday = isSameUtcDay(todo.completedAt, start, end);
-    const completedNow = todo.isDaily ? completedToday : Boolean(todo.completedAt);
+    const completedNow = todo.isDaily
+      ? completedToday
+      : Boolean(todo.completedAt);
     const baseReward = getTodoReward(todo.priority);
     const existingXp = completedNow ? todo.xpReward : 0;
     const existingCoins = completedNow ? todo.coinReward : 0;
@@ -1031,7 +1056,9 @@ app.post("/api/focus/start", authRequired, async (req, res) => {
   const { durationMin, type, todoId } = req.body || {};
   const minutes = Number.parseInt(durationMin, 10);
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    return res.status(400).json({ error: "Duration must be a positive number" });
+    return res
+      .status(400)
+      .json({ error: "Duration must be a positive number" });
   }
   if (type && !["DEEP", "LIGHT"].includes(type)) {
     return res.status(400).json({ error: "Invalid focus type" });
