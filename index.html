@@ -1,0 +1,1241 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeForge | RPG</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="auth-locked">
+    <div class="app-bg" aria-hidden="true"></div>
+    <nav class="sidebar">
+      <div class="logo">
+        <img src="./assets/logo.png" alt="LifeForge logo" />
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" data-target="dashboard">
+          <i class="material-icons">dashboard</i><span>Dashboard</span>
+        </li>
+        <li class="nav-item" data-target="quests">
+          <i class="material-icons">bolt</i><span>Quests</span>
+        </li>
+        <li class="nav-item" data-target="habits">
+          <i class="material-icons">event_note</i><span>Habit Tracker</span>
+        </li>
+        <li class="nav-item" data-target="todo">
+          <i class="material-icons">checklist</i><span>To-Do</span>
+        </li>
+        <li class="nav-item" data-target="focus">
+          <i class="material-icons">timer</i><span>Focus</span>
+        </li>
+        <li class="nav-item" data-target="workout">
+          <i class="material-icons">fitness_center</i><span>The Forge</span>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="content">
+      <section id="auth" class="page active auth-page">
+        <div class="auth-hero">
+          <h1>LifeForge Account</h1>
+          <p>Create your hero profile to unlock your dashboard.</p>
+        </div>
+        <div id="auth-card" class="auth-card">
+          <div class="auth-header">
+            <h3>Account</h3>
+            <span id="auth-status" class="auth-status">Not signed in</span>
+          </div>
+          <div class="auth-mode">
+            <button id="auth-mode-register" class="mode-btn active">
+              Create Account
+            </button>
+            <button id="auth-mode-login" class="mode-btn">Sign In</button>
+          </div>
+          <div id="auth-forms" class="auth-forms">
+            <input
+              id="auth-email"
+              type="email"
+              placeholder="Email"
+              autocomplete="email"
+            />
+            <input
+              id="auth-password"
+              type="password"
+              placeholder="Password"
+              autocomplete="current-password"
+            />
+            <input
+              id="auth-name"
+              type="text"
+              placeholder="Nickname"
+              autocomplete="nickname"
+            />
+            <div class="auth-actions">
+              <button id="auth-login" class="btn-primary hidden">
+                Sign In
+              </button>
+              <button id="auth-register" class="btn-primary">
+                Create Account
+              </button>
+              <a
+                id="auth-google"
+                class="auth-google"
+                href="http://localhost:4000/api/auth/google"
+                >Continue with Google</a
+              >
+            </div>
+            <p class="auth-hint">
+              Use Google login after you set OAuth credentials in the server
+              `.env`.
+            </p>
+          </div>
+          <div id="auth-user" class="auth-user hidden">
+            <span id="auth-user-name">Signed in</span>
+            <button id="auth-logout" class="btn-secondary">Sign Out</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="page">
+        <div class="hero-banner">
+          <div class="hero-info">
+            <h1>
+              Welcome back, <span id="player-name-display">Adventurer</span>
+            </h1>
+            <p class="rank-title">Novice Adventurer - Level 0</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn-primary" onclick="app.ui.switchPage('quests')">
+              View Quests
+            </button>
+            <button id="dashboard-logout" class="btn-secondary">
+              Sign Out
+            </button>
+          </div>
+        </div>
+        <div id="daily-quote" class="quote-panel">
+          <p id="quote-text" class="quote-text"></p>
+          <p id="quote-author" class="quote-author"></p>
+        </div>
+        <div class="stats-grid">
+          <div
+            id="stats-card"
+            class="stat-card stat-card-clickable"
+            onclick="app.ui.openStatsModal()"
+          >
+            <div class="card-header">
+              <i class="material-icons">military_tech</i>
+              <h3>Experience</h3>
+            </div>
+            <div class="level-circle"><span id="lvl-main">0</span></div>
+            <div class="xp-bar-container"><div id="xp-bar-fill"></div></div>
+            <p><span id="xp-val">0</span> / <span id="xp-max">500</span> XP</p>
+          </div>
+
+          <div
+            id="treasury-card"
+            class="stat-card stat-card-clickable"
+            onclick="app.ui.openTreasuryModal()"
+          >
+            <div class="card-header">
+              <i class="material-icons">monetization_on</i>
+              <h3>Treasury</h3>
+            </div>
+            <div class="gold-display">
+              <span id="forgecoins-balance">0</span> <small>ForgeCoins</small>
+            </div>
+            <p class="sub-text">Daily Income: +0 FC</p>
+          </div>
+
+          <div
+            id="rank-card"
+            class="stat-card stat-card-clickable"
+            onclick="app.ui.openRankModal()"
+          >
+            <div class="card-header">
+              <i class="material-icons">shield</i>
+              <h3>Rank</h3>
+            </div>
+            <div class="rank-info">
+              <div class="rank-line">
+                <span class="rank-label">Current</span>
+                <strong id="rank-current">Novice Adventurer</strong>
+              </div>
+              <div class="rank-line">
+                <span class="rank-label">Next</span>
+                <strong id="rank-next">Amateur Scout</strong>
+              </div>
+            </div>
+            <div class="rank-progress">
+              <div id="rank-progress-fill"></div>
+            </div>
+            <p id="rank-progress-text" class="sub-text">Level 0 / 5</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="habits" class="page">
+        <div class="section-header">
+          <h2>Habit Mastery</h2>
+          <div id="habits-main-view">
+            <div class="habit-shell">
+              <div class="habit-mastery-layout">
+                <div class="quest-creator">
+                  <div class="creator-row controls-row">
+                    <label class="field-stack">
+                      <span class="field-label">Habit type</span>
+                      <select id="habit-type" class="lf-select-native">
+                        <option value="FORGE">Forge a Habit</option>
+                        <option value="PURGE">Purge a Habit</option>
+                      </select>
+                    </label>
+                    <label class="field-stack">
+                      <span class="field-label">Difficulty</span>
+                      <select id="habit-difficulty" class="lf-select-native">
+                        <option value="1">Easy</option>
+                        <option value="2">Normal</option>
+                        <option value="3">Hard</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="creator-row name-row">
+                    <label class="name-field">
+                      <i class="material-icons">flag</i>
+                      <input
+                        type="text"
+                        id="habit-name"
+                        class="habit-name-input"
+                        placeholder="Habit name (e.g. Sport)..."
+                      />
+                    </label>
+                  </div>
+                  <div class="creator-row palette-row">
+                    <div class="palette-stack">
+                      <span class="field-label">Color palette</span>
+                      <div class="color-selector">
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#b91c1c"
+                        style="background: #b91c1c"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#dc2626"
+                        style="background: #dc2626"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ff2d2d"
+                        style="background: #ff2d2d"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#f85149"
+                        style="background: #f85149"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ff7b72"
+                        style="background: #ff7b72"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ff4d6d"
+                        style="background: #ff4d6d"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#fb7185"
+                        style="background: #fb7185"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#f472b6"
+                        style="background: #f472b6"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ff7ad9"
+                        style="background: #ff7ad9"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ff00a8"
+                        style="background: #ff00a8"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ffd1dc"
+                        style="background: #ffd1dc"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#c084fc"
+                        style="background: #c084fc"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#8957e5"
+                        style="background: #8957e5"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#7a4bd9"
+                        style="background: #7a4bd9"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#aa00ff"
+                        style="background: #aa00ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#6366f1"
+                        style="background: #6366f1"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#1d4ed8"
+                        style="background: #1d4ed8"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#2962ff"
+                        style="background: #2962ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#3b82f6"
+                        style="background: #3b82f6"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#58a6ff"
+                        style="background: #58a6ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#a5d6ff"
+                        style="background: #a5d6ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#00b0ff"
+                        style="background: #00b0ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#0ea5e9"
+                        style="background: #0ea5e9"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#22d3ee"
+                        style="background: #22d3ee"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#6ee7ff"
+                        style="background: #6ee7ff"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#14b8a6"
+                        style="background: #14b8a6"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#3ddc97"
+                        style="background: #3ddc97"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#00c853"
+                        style="background: #00c853"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#3fb950"
+                        style="background: #3fb950"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#7ee787"
+                        style="background: #7ee787"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#84cc16"
+                        style="background: #84cc16"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#ffd600"
+                        style="background: #ffd600"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#f5c542"
+                        style="background: #f5c542"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#eab308"
+                        style="background: #eab308"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#d29922"
+                        style="background: #d29922"
+                      ></div>
+                      <div
+                        class="color-dot habit-color-dot"
+                        data-color="#f97316"
+                        style="background: #f97316"
+                      ></div>
+                      <input type="hidden" id="habit-color" value="" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="creator-row streak-actions-row">
+                    <div class="streak-stack">
+                      <label class="streak-field">
+                        <span class="streak-label">Streak goal type</span>
+                        <select id="habit-streak-type" class="lf-select-native">
+                          <option value="" disabled selected>Select type</option>
+                          <option value="DAILY">Daily</option>
+                          <option value="WEEKLY">Weekly</option>
+                          <option value="MONTHLY">Monthly</option>
+                        </select>
+                      </label>
+                      <label
+                        class="streak-field streak-count hidden"
+                        id="habit-streak-count-wrap"
+                      >
+                        <span class="streak-label" id="habit-streak-count-label"
+                          >Completions per week</span
+                        >
+                        <input
+                          id="habit-streak-count"
+                          class="streak-count-input"
+                          type="number"
+                          min="1"
+                          max="7"
+                          value="1"
+                        />
+                      </label>
+                    </div>
+                    <button class="btn-primary" id="add-habit-btn">
+                      Create Habit
+                    </button>
+                  </div>
+                </div>
+                <div class="dashboard-preview-block">
+                  <div
+                    class="xp-rules-card habit-dashboard-inline lf-chart-card dashboard-clickable dashboard-preview"
+                    role="button"
+                    aria-label="Open habits dashboard"
+                    title="Open habits dashboard"
+                  >
+                    <div class="weekly-widget">
+                      <div class="weekly-progress">
+                        <div class="weekly-bars-wrap">
+                          <div class="weekly-bars-header">
+                            <span class="weekly-bars-title"
+                              >Weekly completion</span
+                            >
+                            <div class="weekly-legend">
+                              <span class="weekly-legend-item">
+                                <span class="weekly-legend-dot"></span>
+                                Forge
+                              </span>
+                              <span class="weekly-legend-item">
+                                <span class="weekly-legend-dot purge"></span>
+                                Purge
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            id="weekly-progress-bars"
+                            class="weekly-bars"
+                            style="--bar-count: 7"
+                          ></div>
+                        </div>
+                        <div class="weekly-kpis">
+                          <div class="weekly-kpi weekly-kpi-primary">
+                            <span
+                              id="weekly-today-progress"
+                              class="weekly-today"
+                              >Today: 0/0 done</span
+                            >
+                          </div>
+                          <div class="weekly-kpi">
+                            <span class="kpi-label">Team 7D</span>
+                            <span id="weekly-team-consistency" class="kpi-value"
+                              >0%</span
+                            >
+                          </div>
+                          <div class="weekly-kpi">
+                            <span class="kpi-label">Momentum</span>
+                            <span id="weekly-team-momentum" class="kpi-value"
+                              >&rarr; 0%</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="habits-calendar-list" class="habits-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="quests" class="page">
+        <div class="quests-grid">
+          <div class="quests-section">
+            <div class="quests-header">Daily</div>
+            <div id="daily-quests-list" class="quests-container"></div>
+          </div>
+          <div class="quests-section">
+            <div class="quests-header future">Future tasks</div>
+            <div id="future-quests-list" class="quests-container"></div>
+          </div>
+        </div>
+      </section>
+      <section id="todo" class="page">
+        <div class="section-header">
+          <h2>To-Do Execution</h2>
+          <div class="todo-shell">
+            <div class="todo-layout">
+              <div class="todo-creator">
+                <div class="creator-row name-row">
+                  <label class="name-field">
+                    <i class="material-icons">task_alt</i>
+                    <input
+                      type="text"
+                      id="todo-title"
+                      class="habit-name-input"
+                      placeholder="Task title..."
+                    />
+                  </label>
+                  <select id="todo-priority">
+                    <option value="LOW">Priority: Low</option>
+                    <option value="MEDIUM" selected>Priority: Medium</option>
+                    <option value="HIGH">Priority: High</option>
+                  </select>
+                </div>
+                <div class="creator-row">
+                  <div class="color-selector todo-color-selector">
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#b91c1c"
+                      style="background: #b91c1c"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#dc2626"
+                      style="background: #dc2626"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff2d2d"
+                      style="background: #ff2d2d"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#f85149"
+                      style="background: #f85149"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff7b72"
+                      style="background: #ff7b72"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff4d6d"
+                      style="background: #ff4d6d"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#fb7185"
+                      style="background: #fb7185"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#f472b6"
+                      style="background: #f472b6"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff7ad9"
+                      style="background: #ff7ad9"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff00a8"
+                      style="background: #ff00a8"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ffd1dc"
+                      style="background: #ffd1dc"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#c084fc"
+                      style="background: #c084fc"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#8957e5"
+                      style="background: #8957e5"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#7a4bd9"
+                      style="background: #7a4bd9"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#aa00ff"
+                      style="background: #aa00ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#6366f1"
+                      style="background: #6366f1"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#1d4ed8"
+                      style="background: #1d4ed8"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#2962ff"
+                      style="background: #2962ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#3b82f6"
+                      style="background: #3b82f6"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#58a6ff"
+                      style="background: #58a6ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#a5d6ff"
+                      style="background: #a5d6ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#00b0ff"
+                      style="background: #00b0ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#0ea5e9"
+                      style="background: #0ea5e9"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#22d3ee"
+                      style="background: #22d3ee"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#6ee7ff"
+                      style="background: #6ee7ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#14b8a6"
+                      style="background: #14b8a6"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#3ddc97"
+                      style="background: #3ddc97"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#00c853"
+                      style="background: #00c853"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#3fb950"
+                      style="background: #3fb950"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#7ee787"
+                      style="background: #7ee787"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#84cc16"
+                      style="background: #84cc16"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ffd600"
+                      style="background: #ffd600"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#f5c542"
+                      style="background: #f5c542"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#eab308"
+                      style="background: #eab308"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#d29922"
+                      style="background: #d29922"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#f97316"
+                      style="background: #f97316"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ff6d00"
+                      style="background: #ff6d00"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#ffa657"
+                      style="background: #ffa657"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot active"
+                      data-color="#58a6ff"
+                      style="background: #58a6ff"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#c9d1d9"
+                      style="background: #c9d1d9"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#94a3b8"
+                      style="background: #94a3b8"
+                    ></div>
+                    <div
+                      class="color-dot todo-color-dot"
+                      data-color="#6b7280"
+                      style="background: #6b7280"
+                    ></div>
+                    <input type="hidden" id="todo-color" value="#58a6ff" />
+                  </div>
+                </div>
+                <div class="creator-row controls-row">
+                  <label class="todo-daily-toggle">
+                    <input type="checkbox" id="todo-daily" />
+                    <span>Daily reset</span>
+                  </label>
+                  <input type="date" id="todo-due" class="todo-date" />
+                  <button class="btn-primary" id="add-todo-btn">
+                    Add Task
+                  </button>
+                </div>
+                <div class="creator-row">
+                  <textarea
+                    id="todo-desc"
+                    class="todo-desc-input"
+                    placeholder="Optional description..."
+                  ></textarea>
+                </div>
+              </div>
+              <div class="xp-rules-card">
+                <h3>To-Do Rewards</h3>
+                <ul>
+                  <li>Low: 5 XP / 0 FC</li>
+                  <li>Medium: 10 XP / 1 FC</li>
+                  <li>High: 20 XP / 2 FC</li>
+                  <li>Shares daily cap with Habits</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="todo-empty" class="todo-empty hidden">
+          No active tasks. Define today's intent.
+        </div>
+        <div id="todo-list" class="todo-list"></div>
+      </section>
+      <section id="focus" class="page">
+        <div class="section-header">
+          <h2>Focus Sessions</h2>
+          <div class="focus-shell">
+            <div class="focus-layout">
+              <div class="focus-panel">
+                <div class="focus-timer-card">
+                  <div id="focus-timer-display" class="focus-timer-display">
+                    25:00
+                  </div>
+                  <div id="focus-status" class="focus-status">
+                    Ready to focus.
+                  </div>
+                  <div class="focus-quick-row">
+                    <button
+                      class="btn-secondary focus-quick active"
+                      data-min="25"
+                    >
+                      25
+                    </button>
+                    <button class="btn-secondary focus-quick" data-min="50">
+                      50
+                    </button>
+                    <label class="focus-custom">
+                      <span>Custom</span>
+                      <input
+                        type="number"
+                        id="focus-custom-min"
+                        min="1"
+                        placeholder="min"
+                      />
+                    </label>
+                  </div>
+                  <div class="focus-options">
+                    <select id="focus-type">
+                      <option value="DEEP">Deep Focus</option>
+                      <option value="LIGHT">Light Focus</option>
+                    </select>
+                  </div>
+                  <div class="focus-actions">
+                    <button class="btn-primary" id="focus-start-btn">
+                      Start
+                    </button>
+                    <button
+                      class="btn-secondary"
+                      id="focus-complete-btn"
+                      disabled
+                    >
+                      Complete
+                    </button>
+                    <button
+                      class="btn-secondary"
+                      id="focus-cancel-btn"
+                      disabled
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="focus-panel focus-stats-card">
+                <h3>Today's Focus</h3>
+                <div class="focus-metrics">
+                  <div id="focus-today-summary" class="focus-metric">
+                    0 sessions • 0 min
+                  </div>
+                  <div class="focus-metric">
+                    Flow Chain: <strong id="focus-flow-chain">0 days</strong>
+                  </div>
+                  <div id="focus-cap-status" class="focus-metric">
+                    Cap: 0/100 XP • 0/5 FC
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="focus-journal">
+          <div class="focus-journal-header">
+            <h3>Today</h3>
+          </div>
+          <div id="focus-today-list" class="focus-list"></div>
+        </div>
+      </section>
+      <section id="workout" class="page"><h2>The Forge</h2></section>
+    </main>
+
+    <div id="habit-modal" class="modal">
+      <div class="modal-content habit-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">local_fire_department</i>
+            </div>
+            <div>
+              <h2 id="modal-habit-name">Habit</h2>
+              <p class="modal-subtitle">No description</p>
+            </div>
+          </div>
+          <button class="close-modal" onclick="app.ui.closeModal()">
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="modal-heatmap">
+            <div id="modal-heatmap-months" class="heatmap-months"></div>
+            <div class="heatmap-body">
+              <div class="heatmap-weekdays">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+              </div>
+              <div id="modal-heatmap-grid" class="heatmap-grid"></div>
+            </div>
+          </div>
+
+          <div class="modal-calendar">
+            <div class="calendar-weekdays">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+              <span>Sun</span>
+            </div>
+            <div id="modal-calendar-grid" class="calendar-days-grid"></div>
+          </div>
+
+          <div class="month-footer">
+            <div class="month-chip">
+              <i class="material-icons">calendar_month</i>
+              <span id="modal-month-title">Month</span>
+            </div>
+            <div class="month-nav">
+              <button onclick="app.ui.changeMonth(-1)">&lt;</button>
+              <button onclick="app.ui.changeMonth(1)">&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="habit-stats-modal" class="modal">
+      <div class="modal-content habit-stats-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">insights</i>
+            </div>
+            <div>
+              <h2 id="habit-stats-title">Habit Stats</h2>
+              <p class="modal-subtitle">Consistency and streaks</p>
+            </div>
+          </div>
+          <button class="close-modal" onclick="app.ui.closeHabitStatsModal()">
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="habit-stats-controls">
+            <div class="range-buttons">
+              <button
+                class="btn-secondary habit-range-btn active"
+                data-range="30"
+              >
+                30 days
+              </button>
+              <button class="btn-secondary habit-range-btn" data-range="90">
+                90 days
+              </button>
+            </div>
+          </div>
+          <div class="habit-stats-kpis">
+            <div class="stat-card kpi-card">
+              <span class="kpi-label">Habit score</span>
+              <div class="kpi-main">
+                <span id="habit-score-value" class="kpi-value">0</span>
+                <span id="habit-score-rank" class="score-rank">C</span>
+              </div>
+              <span class="kpi-subtext">Index (0-100)</span>
+            </div>
+            <div class="stat-card kpi-card">
+              <span class="kpi-label">Momentum</span>
+              <span id="habit-momentum-value" class="kpi-value">&rarr; 0%</span>
+              <span id="habit-momentum-label" class="kpi-subtext">Stable</span>
+            </div>
+            <button
+              id="habit-risk-card"
+              class="stat-card kpi-card risk-card"
+              type="button"
+            >
+              <span class="kpi-label">Risk &amp; recovery</span>
+              <span id="habit-risk-status" class="kpi-value">Safe</span>
+              <span class="kpi-subtext">
+                Recovery <span id="habit-recovery-value">--</span> | Missed
+                <span id="habit-missed-weekday">--</span>
+              </span>
+            </button>
+          </div>
+          <div class="habit-stats-summary">
+            <div
+              class="stat-item"
+              data-tooltip="Completion rate over the last 7 days."
+            >
+              <span id="habit-stat-last7">0%</span><label>Last 7 days</label>
+            </div>
+            <div
+              class="stat-item"
+              data-tooltip="Completion rate over the last 30 days."
+            >
+              <span id="habit-stat-last30">0%</span><label>Last 30 days</label>
+            </div>
+            <div
+              class="stat-item"
+              data-tooltip="Current streak based on your streak goal type."
+            >
+              <span id="habit-stat-current-streak">0</span
+              ><label>Current streak</label>
+            </div>
+            <div
+              class="stat-item"
+              data-tooltip="Completions in the current interval vs your goal."
+            >
+              <span id="habit-stat-interval">0/0 this week</span
+              ><label>Completion this interval</label>
+            </div>
+            <div
+              class="stat-item"
+              data-tooltip="When the current interval ends."
+            >
+              <span id="habit-stat-reset">--</span><label>Next reset</label>
+            </div>
+            <div
+              class="stat-item"
+              data-tooltip="Best streak achieved so far."
+            >
+              <span id="habit-stat-best">0</span><label>Best streak</label>
+            </div>
+          </div>
+          <div class="chart-wrap lf-chart-card">
+            <canvas id="habit-consistency-chart" height="180"></canvas>
+            <div id="habit-stats-empty" class="chart-empty hidden">
+              No data yet. Complete this habit to forge your first mark.
+            </div>
+          </div>
+          <div id="habit-stat-momentum" class="momentum-label">
+            Getting started
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="habits-dashboard-modal" class="modal">
+      <div class="modal-content habit-dashboard-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">timeline</i>
+            </div>
+            <div>
+              <h2>Habits Scoreboard</h2>
+              <p class="modal-subtitle">Habits consistency and momentum.</p>
+            </div>
+          </div>
+          <button
+            class="close-modal"
+            onclick="app.ui.closeHabitDashboardModal()"
+          >
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="scoreboard-kpis">
+            <div class="kpi-card">
+              <span class="kpi-label" data-tooltip="Overall team score based on consistency and streaks">Habits Score</span>
+              <span id="scoreboard-team-score" class="kpi-value">0</span>
+              <span class="kpi-subtext">Index (0-100)</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label" data-tooltip="Week-over-week change in completion rate">Momentum</span>
+              <span id="scoreboard-team-momentum" class="kpi-value">0%</span>
+              <span class="kpi-subtext">vs prev 7 days</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label" data-tooltip="Habits completed today vs total">Today progress</span>
+              <span id="scoreboard-today-progress" class="kpi-value">0/0</span>
+              <span id="scoreboard-today-breakdown" class="kpi-subtext">
+                Forge 0/0 | Purge 0/0
+              </span>
+            </div>
+          </div>
+          <div class="habit-dashboard-controls">
+            <div class="range-buttons">
+              <button class="btn-secondary range-btn active" data-range="30">
+                30 days
+              </button>
+              <button class="btn-secondary range-btn" data-range="90">
+                90 days
+              </button>
+            </div>
+            <div class="type-filters">
+              <label class="filter-chip">
+                <input type="checkbox" value="FORGE" checked />
+                Forge
+              </label>
+              <label class="filter-chip">
+                <input type="checkbox" value="PURGE" checked />
+                Purge
+              </label>
+            </div>
+            <div class="scoreboard-controls">
+              <select id="dashboard-sort" class="lf-select-native">
+                <option value="score">Sort: Score</option>
+                <option value="momentum">Sort: Momentum</option>
+                <option value="streak">Sort: Streak</option>
+                <option value="name">Sort: Name</option>
+              </select>
+              <input
+                id="dashboard-search"
+                class="scoreboard-search"
+                type="search"
+                placeholder="Search habits"
+                aria-label="Search habits"
+              />
+            </div>
+          </div>
+          <div class="scoreboard-table">
+            <div class="scoreboard-row scoreboard-header">
+              <span data-tooltip="Habit name and type">Habit</span>
+              <span data-tooltip="Overall score based on consistency and streak"
+                >Score</span
+              >
+              <span data-tooltip="Completion rate over the last 7 days"
+                >7d%</span
+              >
+              <span data-tooltip="Completion rate over the last 30 days"
+                >30d%</span
+              >
+              <span
+                data-tooltip="Current streak (days, weeks, or months depending on streak goal type)"
+                >Streak</span
+              >
+              <span data-tooltip="Week-over-week change in completion rate"
+                >Momentum</span
+              >
+              <span data-tooltip="At risk if you missed today while having a streak"
+                >Risk</span
+              >
+            </div>
+            <div id="habits-scoreboard-list" class="scoreboard-list"></div>
+          </div>
+          <div id="habits-scoreboard-empty" class="scoreboard-empty hidden">
+            No activity yet. Complete a habit to start your dashboard.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="rank-modal" class="modal">
+      <div class="modal-content rank-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">shield</i>
+            </div>
+            <div>
+              <h2>Rank Path</h2>
+              <p class="modal-subtitle">Levels 1-100 journey</p>
+            </div>
+          </div>
+          <button
+            class="close-modal"
+            type="button"
+            aria-label="Close rank path"
+            onclick="app.ui.closeRankModal()"
+          >
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div id="rank-list" class="rank-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stats-modal" class="modal">
+      <div class="modal-content stats-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">auto_awesome</i>
+            </div>
+            <div>
+              <h2>Core Stats</h2>
+              <p class="modal-subtitle">Your profile attributes</p>
+            </div>
+          </div>
+          <button
+            class="close-modal"
+            type="button"
+            aria-label="Close stats"
+            onclick="app.ui.closeStatsModal()"
+          >
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div id="stats-list" class="stats-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="treasury-modal" class="modal">
+      <div class="modal-content treasury-modal">
+        <header class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon">
+              <i class="material-icons">storefront</i>
+            </div>
+            <div>
+              <h2>Treasury Shop</h2>
+              <p class="modal-subtitle">Spend your ForgeCoins</p>
+            </div>
+          </div>
+          <button
+            class="close-modal"
+            type="button"
+            aria-label="Close treasury"
+            onclick="app.ui.closeTreasuryModal()"
+          >
+            &times;
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="treasury-balance">
+            Balance: <strong id="treasury-balance">0</strong> FC
+          </div>
+          <div class="treasury-items">
+            <div class="treasury-empty">Shop items coming soon.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.API_URL =
+        window.API_URL || `http://${window.location.hostname}:4000`;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="./chart-normalization.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Todo" ADD COLUMN "color" TEXT NOT NULL DEFAULT '#58a6ff';
