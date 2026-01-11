@@ -284,9 +284,8 @@ const rollingAverage = (values, windowSize) => {
 class ApiClient {
   async request(path, options = {}) {
     const token = localStorage.getItem("lf_token");
-
     const res = await fetch(`${API_BASE}${path}`, {
-      credentials: "include", // оставляем для ПК/cookie
+      credentials: "include", // оставляем, чтобы ПК работал через cookie
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -3966,10 +3965,12 @@ class LifeForge {
     if (loginBtn) {
       loginBtn.onclick = async () => {
         try {
-          await this.api.login({
+          const data = await this.api.login({
             email: email.value.trim(),
             password: password.value,
           });
+          if (data?.token) localStorage.setItem("lf_token", data.token);
+
           await this.refreshSession();
           updateAuthUI();
           updateDashboardAccount();
@@ -3986,11 +3987,13 @@ class LifeForge {
             setStatus("Nickname is required");
             return;
           }
-          await this.api.register({
+          const data = await this.api.register({
             email: email.value.trim(),
             password: password.value,
             name: nickname,
           });
+          if (data?.token) localStorage.setItem("lf_token", data.token);
+
           await this.refreshSession();
           updateAuthUI();
           updateDashboardAccount();
@@ -4003,6 +4006,7 @@ class LifeForge {
       logoutBtn.onclick = async () => {
         try {
           await this.api.logout();
+          localStorage.removeItem("lf_token");
         } catch (_err) {
           setStatus("Logout failed");
         }
@@ -4015,6 +4019,7 @@ class LifeForge {
       dashboardLogoutBtn.onclick = async () => {
         try {
           await this.api.logout();
+          localStorage.removeItem("lf_token");
         } catch (_err) {
           setStatus("Logout failed");
         }
