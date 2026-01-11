@@ -97,7 +97,6 @@ app.use(
 );
 
 app.options("*", cors({ credentials: true }));
-
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -293,6 +292,7 @@ const getOrCreateProgress = async (tx, userId) => {
 const authRequired = async (req, res, next) => {
   const auth = req.headers.authorization || "";
   const [type, bearerToken] = auth.split(" ");
+
   const token =
     (type === "Bearer" && bearerToken ? bearerToken : null) ||
     req.cookies.lf_token;
@@ -303,6 +303,7 @@ const authRequired = async (req, res, next) => {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user) return res.status(401).json({ error: "Unauthorized" });
+
     req.user = user;
     req.progress = await getOrCreateProgress(prisma, user.id);
     return next();
