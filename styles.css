@@ -57,7 +57,7 @@ body {
   position: relative;
 }
 body.modal-open {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .app-bg {
@@ -331,6 +331,11 @@ body.auth-locked .content {
 .sidebar:hover .logo-text {
   opacity: 1;
   max-width: 140px;
+}
+.modal-debug {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #6e7681;
 }
 .nav-item {
   display: flex;
@@ -3189,6 +3194,23 @@ select option:checked {
 }
 .hidden {
   display: none;
+}
+.toast {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  background: rgba(15, 20, 27, 0.95);
+  border: 1px solid #232a33;
+  color: #e6edf3;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  max-width: min(420px, calc(100vw - 36px));
+}
+.toast.is-error {
+  border-color: rgba(248, 81, 73, 0.6);
+  color: #f85149;
 }
 
 .quest-creator {

@@ -1,4 +1,18 @@
 const API_BASE = window.API_URL || `http://${window.location.hostname}:4000`;
+
+const DEBUG_LOGS = true;
+
+const showToast = (message, variant = "error") => {
+  const toast = document.getElementById("toast");
+  if (!toast || !message) return;
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  toast.classList.toggle("is-error", variant === "error");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 4000);
+};
 const DEBUG_WEEKLY = true;
 const DEBUG_CONSISTENCY = false;
 
@@ -284,20 +298,31 @@ const rollingAverage = (values, windowSize) => {
 class ApiClient {
   async request(path, options = {}) {
     const token = localStorage.getItem("lf_token");
-    const res = await fetch(`${API_BASE}${path}`, {
-      credentials: "include", // оставляем, чтобы ПК работал через cookie
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers || {}),
-      },
-      ...options,
-    });
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        credentials: "include", // cookie
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(options.headers || {}),
+        },
+        ...options,
+      });
 
-    if (res.status === 204) return null;
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || "Request failed");
-    return data;
+      if (res.status === 204) return null;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = data.error || "Request failed";
+        showToast(message, "error");
+        throw new Error(message);
+      }
+      return data;
+    } catch (err) {
+      const message = err?.message || "Network error";
+      showToast(message, "error");
+      throw err;
+    }
+
   }
   me() {
     return this.request("/api/me");
@@ -535,20 +560,30 @@ class HabitManager {
   }
   async loadLogsForVisibleRange(weeks = 26) {
     const startWeek = this.getWeekStart(new Date());
-    const from = this.getDateKey(startWeek);
-    const end = new Date(startWeek);
-    end.setDate(startWeek.getDate() + weeks * 7 - 1);
-    const to = this.getDateKey(end);
+    const rangeStart = new Date(startWeek);
+    rangeStart.setDate(startWeek.getDate() - weeks * 7);
+    const from = getLocalDateKey(rangeStart);
+    const to = getLocalDateKey(new Date());
 
     await Promise.all(
       this.habits.map(async (habit) => {
         const response = await this.app.api.getHabitLogs(habit.id, from, to);
         habit.history = {};
-        (response?.logs || []).forEach((log) => {
+        const logs = response?.logs || [];
+        logs.forEach((log) => {
           if (log.status === SUCCESS_STATUS[habit.type]) {
-            habit.history[log.date] = true;
+            const key = normalizeLogDateKey(log.date);
+            habit.history[key] = true;
           }
         });
+        if (DEBUG_LOGS) {
+          const keys = Object.keys(habit.history);
+          console.debug("habit logs", {
+            habitId: habit.id,
+            logs: logs.length,
+            keys: keys.slice(0, 5),
+          });
+        }
       })
     );
   }
@@ -598,14 +633,20 @@ class HabitManager {
       ? FAILURE_STATUS[h.type]
       : SUCCESS_STATUS[h.type];
     try {
+      console.debug("habit:day-click", { habitId: h.id, dateKey });
       const response = await this.app.api.logHabit(h.id, {
         date: dateKey,
         status: desiredStatus,
       });
+      const normalizedKey = normalizeLogDateKey(
+        response?.log?.date || dateKey
+      );
       if (response?.log?.status === SUCCESS_STATUS[h.type]) {
-        h.history[dateKey] = true;
+        h.history[normalizedKey] = true;
+        showToast("Saved", "success");
       } else {
-        delete h.history[dateKey];
+        delete h.history[normalizedKey];
+        showToast("Updated", "success");
       }
       if (response?.progress) {
         this.app.player.applyProgress(response.progress, this.app.user);
@@ -3626,8 +3667,18 @@ class UI {
     if (modalContent) modalContent.style.setProperty("--weeks", heatmap.weeks);
     const heatmapMonths = document.getElementById("modal-heatmap-months");
     const heatmapGrid = document.getElementById("modal-heatmap-grid");
+    const debugEl = document.getElementById("modal-log-debug");
     if (heatmapMonths) heatmapMonths.innerHTML = heatmap.months;
     if (heatmapGrid) heatmapGrid.innerHTML = heatmap.boxes;
+    if (debugEl) {
+      if (DEBUG_LOGS) {
+        const logCount = Object.keys(h.history || {}).length;
+        debugEl.textContent = `Loaded logs: ${logCount}`;
+        debugEl.classList.remove("hidden");
+      } else {
+        debugEl.classList.add("hidden");
+      }
+    }
     document.getElementById("modal-month-title").innerText =
       this.modalDate.toLocaleString("en-US", {
         month: "short",
@@ -3639,7 +3690,7 @@ class UI {
     for (let i = 0; i < start; i++)
       grid.innerHTML += `<div class="modal-day empty"></div>`;
     for (let day = 1; day <= new Date(y, m + 1, 0).getDate(); day++) {
-      const k = `${y}-${pad2(m + 1)}-${pad2(day)}`;
+      const k = getLocalDateKey(new Date(y, m, day));
       const dayEl = document.createElement("div");
       const dayDate = new Date(y, m, day);
       const today = new Date();
@@ -3651,7 +3702,10 @@ class UI {
       }`;
       dayEl.innerHTML = `<span>${day}</span>`;
       if (!isFuture) {
-        dayEl.onclick = () => this.app.habitManager.toggleDayStatus(h.id, k);
+        dayEl.onclick = () => {
+          console.debug("modal-day-click", { habitId: h.id, dateKey: k });
+          this.app.habitManager.toggleDayStatus(h.id, k);
+        };
       }
       grid.appendChild(dayEl);
     }
@@ -3927,7 +3981,7 @@ class LifeForge {
         authForms.classList.add("hidden");
         authUser.classList.remove("hidden");
         authUserName.textContent = this.user.name || this.user.email || "User";
-        setStatus("Signed in");
+        setStatus(`Signed in as ${this.user.email || this.user.name || "User"}`);
       } else {
         authForms.classList.remove("hidden");
         authUser.classList.add("hidden");
@@ -3965,6 +4019,7 @@ class LifeForge {
     if (loginBtn) {
       loginBtn.onclick = async () => {
         try {
+          setStatus("Signing in...");
           const data = await this.api.login({
             email: email.value.trim(),
             password: password.value,
@@ -3975,7 +4030,7 @@ class LifeForge {
           updateAuthUI();
           updateDashboardAccount();
         } catch (err) {
-          setStatus(err.message || "Login failed");
+          setStatus(`Sign in failed: ${err.message || "Login failed"}`);
         }
       };
     }

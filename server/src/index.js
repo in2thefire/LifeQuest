@@ -79,6 +79,13 @@ const FAILURE_STATUS = {
   PURGE: "SLIPPED",
 };
 
+const checkDb = async () => {
+  await prisma.$queryRaw`SELECT 1`;
+  await prisma.habit.count();
+  await prisma.habitLog.count();
+  return "connected";
+};
+
 if (process.env.NODE_ENV === "production" && allowedOrigins.has("*")) {
   throw new Error("FRONTEND_ORIGIN cannot include '*' in production.");
 }
@@ -387,6 +394,14 @@ if (googleEnabled) {
 }
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/health", async (_req, res) => {
+  try {
+    const db = await checkDb();
+    res.json({ ok: true, db });
+  } catch (err) {
+    res.status(500).json({ ok: false, db: "error" });
+  }
+});
 
 app.post("/api/auth/register", rateLimitAuth, async (req, res) => {
   const { email, password, name } = req.body || {};
@@ -536,6 +551,7 @@ app.post("/api/habits", authRequired, async (req, res) => {
       color: color || "#58a6ff",
     },
   });
+  console.info("habit:create", { userId: req.user.id, habitId: habit.id });
   res.status(201).json({
     habit: {
       id: habit.id,
@@ -713,6 +729,12 @@ app.post("/api/habits/:id/log", authRequired, async (req, res) => {
       coins: response.log.coins,
     },
     progress: serializeProgress(response.progress),
+  });
+  console.info("habit:log", {
+    userId: req.user.id,
+    habitId: response.log.habitId,
+    date: toDateKey(response.log.date),
+    status: response.log.status,
   });
 });
 
@@ -1271,4 +1293,7 @@ app.get("/api/focus/range", authRequired, async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
+  checkDb()
+    .then((db) => console.log(`DB check: ${db}`))
+    .catch((err) => console.error("DB check failed:", err?.message || err));
 });

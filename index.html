@@ -931,6 +931,7 @@
             <div>
               <h2 id="modal-habit-name">Habit</h2>
               <p class="modal-subtitle">No description</p>
+              <p id="modal-log-debug" class="modal-debug hidden"></p>
             </div>
           </div>
           <button class="close-modal" onclick="app.ui.closeModal()">
@@ -1293,12 +1294,18 @@
       </div>
     </div>
 
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
     <script>
       window.API_URL =
         window.API_URL ||
-        (window.location.hostname.includes("onrender.com")
-          ? "https://lifequest-api-lfjl.onrender.com"
-          : `http://${window.location.hostname}:4000`);
+        (() => {
+          const host = window.location.hostname;
+          if (!host || host === "localhost" || host === "127.0.0.1") {
+            return `http://${host || "localhost"}:4000`;
+          }
+          return "https://lifequest-api-lfjl.onrender.com";
+        })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
